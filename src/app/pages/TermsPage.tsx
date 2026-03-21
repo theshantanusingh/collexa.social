@@ -216,9 +216,9 @@ export function TermsPage() {
                 For questions about these Terms of Service, please contact us:
               </p>
               <div className="space-y-3 text-lg text-neutral-700">
-                <p>Email: legal@collexa.com</p>
-                <p>Phone: +91 98765 43210</p>
-                <p>Address: Mumbai, India</p>
+                <p>Email: contact@collexa.social</p>
+                <p>Phone: +91 86306 16359</p>
+                <p>Address: Greater Noida, Uttar Pradesh</p>
               </div>
             </section>
           </div>
