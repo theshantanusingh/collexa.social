@@ -33,7 +33,7 @@ export function Navbar() {
           <Home className="w-5 h-5 transition-transform group-hover:scale-110" />
           <span className="text-2xl tracking-tighter font-light">COLLEXA</span>
         </Link>
-        <div className="hidden md:flex gap-12 text-sm tracking-wide">
+        <div className="flex gap-4 md:gap-12 text-xs md:text-sm tracking-wide items-center">
           <Link to="/get-in-touch" className="hover:opacity-60 transition-opacity">
             GET IN TOUCH
           </Link>

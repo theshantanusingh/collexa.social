@@ -47,19 +47,19 @@ export function Capabilities() {
   ];
 
   return (
-    <section ref={sectionRef} className="py-40 px-8 bg-[#0a0a0a]">
+    <section ref={sectionRef} className="py-24 md:py-40 px-6 md:px-8 bg-[#0a0a0a]">
       <div className="max-w-[1800px] mx-auto">
-        <div className="mb-20">
+        <div className="mb-12 md:mb-20">
           <h2 className="text-[clamp(2rem,6vw,5rem)] tracking-tighter font-light leading-tight">
             Capabilities
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-12 gap-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-12 gap-y-4 md:gap-y-8">
           {capabilities.map((capability, index) => (
             <div
               key={index}
-              className="capability-item text-xl text-neutral-400 hover:text-white transition-colors cursor-default"
+              className="capability-item text-lg md:text-xl text-neutral-400 hover:text-white transition-colors cursor-default py-3 border-b border-neutral-800 md:border-none md:py-0"
             >
               {capability}
             </div>
