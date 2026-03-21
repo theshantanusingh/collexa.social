@@ -93,7 +93,7 @@ const CustomSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex justify-between items-center bg-transparent border-b pb-4 text-2xl text-left focus:outline-none transition-colors ${
+        className={`w-full flex justify-between items-center bg-transparent border-b pb-3 md:pb-4 text-xl md:text-2xl text-left focus:outline-none transition-colors ${
           error ? "border-red-500 text-red-500" : "border-neutral-300 hover:border-black"
         }`}
       >
@@ -127,7 +127,7 @@ const CustomSelect = ({
           <button
             key={opt.value}
             type="button"
-            className="w-full text-left px-6 py-4 text-xl hover:bg-neutral-100 transition-colors border-b border-neutral-100 last:border-b-0"
+            className="w-full text-left px-4 py-3 md:px-6 md:py-4 text-lg md:text-xl hover:bg-neutral-100 transition-colors border-b border-neutral-100 last:border-b-0"
             onClick={() => {
               onChange(name, opt.value);
               setIsOpen(false);
@@ -333,7 +333,7 @@ export function GetInTouchPage() {
             <h1 className="text-[clamp(2.5rem,8vw,8rem)] tracking-tighter font-light leading-[0.9] mb-6">
               Get In Touch
             </h1>
-            <p className="text-xl text-neutral-600 max-w-2xl">
+            <p className="text-lg md:text-xl text-neutral-600 max-w-2xl">
               Tell us about your project and we'll get back to you within 24
               hours.
             </p>
@@ -364,11 +364,11 @@ export function GetInTouchPage() {
                 <label className={`block text-sm mb-6 ${errors.userType ? "text-red-500" : "text-neutral-500"}`}>
                   I am a *
                 </label>
-                <div className="flex gap-8">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
                   <button
                     type="button"
                     onClick={() => handleUserTypeChange("brand")}
-                    className={`px-12 py-6 border transition-all text-xl ${
+                    className={`px-6 py-4 md:px-12 md:py-6 border transition-all text-lg md:text-xl ${
                       userType === "brand"
                         ? "bg-black text-white border-black"
                         : "bg-white text-black border-neutral-300 hover:border-black"
@@ -379,7 +379,7 @@ export function GetInTouchPage() {
                   <button
                     type="button"
                     onClick={() => handleUserTypeChange("influencer")}
-                    className={`px-12 py-6 border transition-all text-xl ${
+                    className={`px-6 py-4 md:px-12 md:py-6 border transition-all text-lg md:text-xl ${
                       userType === "influencer"
                         ? "bg-black text-white border-black"
                         : "bg-white text-black border-neutral-300 hover:border-black"
@@ -394,7 +394,7 @@ export function GetInTouchPage() {
               {userType && (
                 <>
                   {/* Personal Information */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                     <div className="form-input relative pb-6">
                       <label className={`block text-sm mb-4 ${errors.name ? "text-red-500" : "text-neutral-500"}`}>
                         Your Name *
@@ -404,7 +404,7 @@ export function GetInTouchPage() {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        className={`w-full bg-transparent border-b pb-4 text-2xl focus:outline-none transition-colors ${errors.name ? 'border-red-500 text-red-500' : 'border-neutral-300 focus:border-black'}`}
+                        className={`w-full bg-transparent border-b pb-3 md:pb-4 text-xl md:text-2xl focus:outline-none transition-colors ${errors.name ? 'border-red-500 text-red-500' : 'border-neutral-300 focus:border-black'}`}
                         placeholder="Full name"
                       />
                       {errors.name && <span className="error-text absolute bottom-0 left-0 text-red-500 text-sm tracking-wide">{errors.name}</span>}
@@ -419,7 +419,7 @@ export function GetInTouchPage() {
                         name="company"
                         value={formData.company}
                         onChange={handleChange}
-                        className={`w-full bg-transparent border-b pb-4 text-2xl focus:outline-none transition-colors ${errors.company ? 'border-red-500 text-red-500' : 'border-neutral-300 focus:border-black'}`}
+                        className={`w-full bg-transparent border-b pb-3 md:pb-4 text-xl md:text-2xl focus:outline-none transition-colors ${errors.company ? 'border-red-500 text-red-500' : 'border-neutral-300 focus:border-black'}`}
                         placeholder={
                           userType === "brand"
                             ? "Company name"
@@ -431,7 +431,7 @@ export function GetInTouchPage() {
                   </div>
 
                   {/* Contact Information */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                     <div className="form-input relative pb-6">
                       <label className={`block text-sm mb-4 ${errors.email ? "text-red-500" : "text-neutral-500"}`}>
                         Email Address *
@@ -441,7 +441,7 @@ export function GetInTouchPage() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className={`w-full bg-transparent border-b pb-4 text-2xl focus:outline-none transition-colors ${errors.email ? 'border-red-500 text-red-500' : 'border-neutral-300 focus:border-black'}`}
+                        className={`w-full bg-transparent border-b pb-3 md:pb-4 text-xl md:text-2xl focus:outline-none transition-colors ${errors.email ? 'border-red-500 text-red-500' : 'border-neutral-300 focus:border-black'}`}
                         placeholder="email@company.com"
                       />
                       {errors.email && <span className="error-text absolute bottom-0 left-0 text-red-500 text-sm tracking-wide">{errors.email}</span>}
@@ -456,7 +456,7 @@ export function GetInTouchPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className={`w-full bg-transparent border-b pb-4 text-2xl focus:outline-none transition-colors ${errors.phone ? 'border-red-500 text-red-500' : 'border-neutral-300 focus:border-black'}`}
+                        className={`w-full bg-transparent border-b pb-3 md:pb-4 text-xl md:text-2xl focus:outline-none transition-colors ${errors.phone ? 'border-red-500 text-red-500' : 'border-neutral-300 focus:border-black'}`}
                         placeholder="+91 XXXXX XXXXX"
                       />
                       {errors.phone && <span className="error-text absolute bottom-0 left-0 text-red-500 text-sm tracking-wide">{errors.phone}</span>}
@@ -466,7 +466,7 @@ export function GetInTouchPage() {
                   {/* Brand Specific Fields */}
                   {userType === "brand" && (
                     <>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                         <div className="form-input relative pb-6">
                           <label className={`block text-sm mb-4 ${errors.projectType ? "text-red-500" : "text-neutral-500"}`}>
                             Project Type *
@@ -508,7 +508,7 @@ export function GetInTouchPage() {
                           value={formData.message}
                           onChange={handleChange}
                           rows={4}
-                          className="w-full bg-transparent border-b border-neutral-300 pb-4 text-2xl focus:outline-none focus:border-black transition-colors resize-none"
+                          className="w-full bg-transparent border-b border-neutral-300 pb-3 md:pb-4 text-xl md:text-2xl focus:outline-none focus:border-black transition-colors resize-none"
                           placeholder="Tell us about your project, goals, and specific requirements..."
                         />
                       </div>
@@ -518,7 +518,7 @@ export function GetInTouchPage() {
                   {/* Influencer Specific Fields */}
                   {userType === "influencer" && (
                     <>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                         <div className="form-input relative pb-6">
                           <label className={`block text-sm mb-4 ${errors.niche ? "text-red-500" : "text-neutral-500"}`}>
                             Primary Niche *
@@ -550,7 +550,7 @@ export function GetInTouchPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                         <div className="form-input relative pb-6">
                           <label className={`block text-sm mb-4 ${errors.followers ? "text-red-500" : "text-neutral-500"}`}>
                             Total Followers *
@@ -592,7 +592,7 @@ export function GetInTouchPage() {
                           value={formData.message}
                           onChange={handleChange}
                           rows={4}
-                          className="w-full bg-transparent border-b border-neutral-300 pb-4 text-2xl focus:outline-none focus:border-black transition-colors resize-none"
+                          className="w-full bg-transparent border-b border-neutral-300 pb-3 md:pb-4 text-xl md:text-2xl focus:outline-none focus:border-black transition-colors resize-none"
                           placeholder="Share your content style, audience demographics, past collaborations, and what type of brand partnerships you're interested in..."
                         />
                       </div>
@@ -604,7 +604,7 @@ export function GetInTouchPage() {
                     <button
                       type="submit"
                       disabled={submitStatus === "submitting"}
-                      className="group relative text-2xl tracking-tight hover:opacity-60 transition-opacity disabled:opacity-50"
+                      className="group relative text-xl md:text-2xl tracking-tight hover:opacity-60 transition-opacity disabled:opacity-50"
                     >
                       <span className="relative z-10">
                         {submitStatus === "submitting" ? "Submitting..." : userType === "brand" ? "Submit Application" : "Join Our Network"}
