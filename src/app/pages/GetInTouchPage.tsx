@@ -47,7 +47,7 @@ const FOLLOWERS = [
   { value: "50k-100k", label: "50K - 100K" },
   { value: "100k-500k", label: "100K - 500K" },
   { value: "500k-1m", label: "500K - 1M" },
-  { value: "1m+", label: "1M+" },
+  { value: "1m+", label: "1 Million+" },
 ];
 
 const CONTENT_TYPES = [
