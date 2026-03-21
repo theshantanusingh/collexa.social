@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  collexa-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: collexa_gateway
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - collexa-backend
+
+  collexa-backend:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: collexa_backend
+    environment:
+      - DB_HOST=collexa-db
+      - DB_PORT=5432
+      - DB_USER=collexa_admin
+      - DB_PASSWORD=secure_collexa_password
+      - DB_NAME=collexa
+      - JWT_SECRET=super_secret_collexa_key_99x!
+      - PORT=8080
+    restart: unless-stopped
+    depends_on:
+      - collexa-db
+
+  collexa-db:
+    image: postgres:15-alpine
+    container_name: collexa_db
+    environment:
+      POSTGRES_USER: collexa_admin
+      POSTGRES_PASSWORD: secure_collexa_password
+      POSTGRES_DB: collexa
+    ports:
+      - "5432:5432"
+    volumes:
+      - collexa_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  collexa_pgdata:
