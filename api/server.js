@@ -59,6 +59,8 @@ const Submission = sequelize.define('Submission', {
   
   // Influencer specific
   niche: { type: DataTypes.STRING, allowNull: true },
+  platforms: { type: DataTypes.STRING, allowNull: true },
+  followers: { type: DataTypes.STRING, allowNull: true },
   contentType: { type: DataTypes.STRING, allowNull: true },
 });
 
@@ -123,6 +125,21 @@ app.post('/api/admin/create', authenticateJWT, async (req, res) => {
     
     const newAdmin = await Admin.create({ email, passwordHash });
     res.status(201).json({ message: 'Admin created successfully', id: newAdmin.id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/admin/change-password', authenticateJWT, async (req, res) => {
+  try {
+    const { adminId, newPassword } = req.body;
+    if (!adminId || !newPassword) return res.status(400).json({ error: 'Missing required fields' });
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    await Admin.update({ passwordHash }, { where: { id: adminId } });
+    res.json({ message: 'Password updated successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

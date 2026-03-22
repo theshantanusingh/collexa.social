@@ -36,10 +36,29 @@ export function AdminDashboard() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [contactInfo, setContactInfo] = useState<ContactInfo[]>([]);
   const [activeTab, setActiveTab] = useState<"admins"| "submissions" | "contact">("submissions");
+  const [submissionFilter, setSubmissionFilter] = useState<"all" | "brand" | "influencer">("all");
   
   // Admin form state
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [editingAdminId, setEditingAdminId] = useState<string | null>(null);
+  const [changePasswordValue, setChangePasswordValue] = useState("");
+  
+  // Manual Submission state
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [manualSub, setManualSub] = useState({
+    userType: "brand",
+    name: "",
+    company: "",
+    email: "",
+    phone: "",
+    message: "",
+    projectType: "",
+    timeline: "",
+    niche: "",
+    platforms: "",
+    followers: ""
+  });
   
   // Contact info form state
   const [newCategory, setNewCategory] = useState("email");
@@ -134,6 +153,56 @@ export function AdminDashboard() {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAdminId || !changePasswordValue) return;
+    
+    const token = localStorage.getItem("collexa_admin_token");
+    try {
+      const response = await fetch("/api/admin/change-password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ adminId: editingAdminId, newPassword: changePasswordValue })
+      });
+      if (response.ok) {
+        setMessage({ text: "Password changed successfully", type: "success" });
+        setEditingAdminId(null);
+        setChangePasswordValue("");
+      } else {
+        const data = await response.json();
+        setMessage({ text: data.error || "Change failed", type: "error" });
+      }
+    } catch (err) {
+      setMessage({ text: "Network error", type: "error" });
+    }
+  };
+
+  const handleManualSubmission = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("/api/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(manualSub)
+      });
+      if (response.ok) {
+        setMessage({ text: "Manual submission recorded", type: "success" });
+        setShowManualForm(false);
+        setManualSub({
+          userType: "brand", name: "", company: "", email: "", phone: "", message: "",
+          projectType: "", timeline: "", niche: "", platforms: "", followers: ""
+        });
+        const token = localStorage.getItem("collexa_admin_token");
+        fetchSubmissions(token!);
+      }
+    } catch (err) {
+      setMessage({ text: "Failed to create submission", type: "error" });
+    }
+  };
+
   const handleCreateContactInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage({ text: "", type: "" });
@@ -186,6 +255,11 @@ export function AdminDashboard() {
     navigate("/collexa-hq-portal");
   };
 
+  const filteredSubmissions = submissions.filter(s => {
+    if (submissionFilter === "all") return true;
+    return s.userType === submissionFilter;
+  });
+
   return (
     <div className="min-h-screen bg-black text-white p-8 md:p-16">
       <div className="max-w-6xl mx-auto">
@@ -231,7 +305,7 @@ export function AdminDashboard() {
             <div className="lg:col-span-5">
               <h2 className="text-xl font-light mb-8">Spawn New Admin</h2>
               <form onSubmit={handleCreateAdmin} className="space-y-6 bg-neutral-900 border border-neutral-800 p-8 rounded-sm">
-                {message.text && (
+                {message.text && (activeTab === 'admins') && (
                   <div className={`p-4 rounded-sm text-sm ${message.type === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                     {message.text}
                   </div>
@@ -274,14 +348,38 @@ export function AdminDashboard() {
               <h2 className="text-xl font-light mb-8">Active Administrators</h2>
               <div className="space-y-4">
                 {admins.map((admin: Admin) => (
-                  <div key={admin.id} className="flex justify-between items-center p-6 border border-neutral-800 rounded-sm bg-neutral-900/50">
-                    <div>
-                      <div className="text-lg mb-1">{admin.email}</div>
-                      <div className="text-xs text-neutral-500 font-mono">{admin.id}</div>
+                  <div key={admin.id} className="p-6 border border-neutral-800 rounded-sm bg-neutral-900/50">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <div className="text-lg mb-1">{admin.email}</div>
+                        <div className="text-xs text-neutral-500 font-mono">{admin.id}</div>
+                      </div>
+                      <button
+                        onClick={() => { setEditingAdminId(editingAdminId === admin.id ? null : admin.id); setMessage({text: "", type:""}); }}
+                        className="text-xs uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
+                      >
+                        {editingAdminId === admin.id ? 'Cancel' : 'Change Password'}
+                      </button>
                     </div>
-                    <div className="text-xs text-neutral-600 uppercase tracking-widest text-right">
-                      Since<br/>
-                      <span className="text-neutral-400">{new Date(admin.createdAt).toLocaleDateString()}</span>
+
+                    {editingAdminId === admin.id && (
+                      <form onSubmit={handleChangePassword} className="mt-4 pt-4 border-t border-neutral-800 space-y-4">
+                        <input
+                          type="password"
+                          value={changePasswordValue}
+                          onChange={(e) => setChangePasswordValue(e.target.value)}
+                          placeholder="New secure password"
+                          className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-2 text-white text-sm focus:outline-none focus:border-neutral-500"
+                          required
+                        />
+                        <button type="submit" className="text-xs uppercase tracking-widest bg-white text-black px-4 py-2 rounded-sm hover:bg-neutral-200">
+                          Update Password
+                        </button>
+                      </form>
+                    )}
+
+                    <div className="text-xs text-neutral-600 uppercase tracking-widest">
+                      Since <span className="text-neutral-400">{new Date(admin.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
                 ))}
@@ -386,15 +484,154 @@ export function AdminDashboard() {
 
         {activeTab === 'submissions' && (
           <div>
-            <h2 className="text-xl font-light mb-8">Recent Application Submissions</h2>
-            {submissions.length === 0 ? (
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+              <h2 className="text-xl font-light">Application Submissions</h2>
+              <div className="flex gap-4">
+                <div className="flex bg-neutral-900 border border-neutral-800 p-1 rounded-sm">
+                  {['all', 'brand', 'influencer'].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setSubmissionFilter(f as any)}
+                      className={`px-4 py-1.5 text-xs uppercase tracking-widest rounded-sm transition-colors ${submissionFilter === f ? 'bg-white text-black' : 'text-neutral-500 hover:text-white'}`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowManualForm(!showManualForm)}
+                  className="px-6 py-2 bg-neutral-800 text-white text-xs uppercase tracking-widest rounded-sm hover:bg-neutral-700 transition-colors"
+                >
+                  {showManualForm ? 'Cancel Entry' : 'Manual Entry'}
+                </button>
+              </div>
+            </div>
+
+            {showManualForm && (
+              <div className="mb-12 bg-neutral-900 border border-neutral-800 p-8 rounded-sm">
+                <h3 className="text-lg font-light mb-6">Create Manual Submission</h3>
+                <form onSubmit={handleManualSubmission} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">User Type</label>
+                    <select
+                      value={manualSub.userType}
+                      onChange={(e) => setManualSub({...manualSub, userType: e.target.value})}
+                      className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm"
+                    >
+                      <option value="brand">Brand</option>
+                      <option value="influencer">Influencer</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Name</label>
+                    <input
+                      type="text"
+                      value={manualSub.name}
+                      onChange={(e) => setManualSub({...manualSub, name: e.target.value})}
+                      className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Company / Social Handle</label>
+                    <input
+                      type="text"
+                      value={manualSub.company}
+                      onChange={(e) => setManualSub({...manualSub, company: e.target.value})}
+                      className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Email</label>
+                    <input
+                      type="email"
+                      value={manualSub.email}
+                      onChange={(e) => setManualSub({...manualSub, email: e.target.value})}
+                      className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Phone</label>
+                    <input
+                      type="text"
+                      value={manualSub.phone}
+                      onChange={(e) => setManualSub({...manualSub, phone: e.target.value})}
+                      className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm"
+                      required
+                    />
+                  </div>
+                  
+                  {manualSub.userType === 'brand' ? (
+                    <>
+                      <div>
+                        <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Project Type</label>
+                        <input
+                          type="text"
+                          value={manualSub.projectType}
+                          onChange={(e) => setManualSub({...manualSub, projectType: e.target.value})}
+                          className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Timeline</label>
+                        <input
+                          type="text"
+                          value={manualSub.timeline}
+                          onChange={(e) => setManualSub({...manualSub, timeline: e.target.value})}
+                          className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Niche</label>
+                        <input
+                          type="text"
+                          value={manualSub.niche}
+                          onChange={(e) => setManualSub({...manualSub, niche: e.target.value})}
+                          className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Platforms</label>
+                        <input
+                          type="text"
+                          value={manualSub.platforms}
+                          onChange={(e) => setManualSub({...manualSub, platforms: e.target.value})}
+                          className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="md:col-span-2">
+                    <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Message / Notes</label>
+                    <textarea
+                      value={manualSub.message}
+                      onChange={(e) => setManualSub({...manualSub, message: e.target.value})}
+                      className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm h-32"
+                    ></textarea>
+                  </div>
+                  <div className="md:col-span-2">
+                    <button type="submit" className="w-full py-4 bg-white text-black text-sm uppercase tracking-widest hover:bg-neutral-200">
+                      Record Submission
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {filteredSubmissions.length === 0 ? (
               <div className="p-16 border border-neutral-800 rounded-sm text-center text-neutral-500 bg-neutral-900/50">
-                <div className="text-2xl mb-2 font-light text-white">No submissions yet</div>
-                <p>When brands or influencers fill out the Get In Touch form, their info will appear here.</p>
+                <div className="text-2xl mb-2 font-light text-white">No submissions matching filter</div>
+                <p>Try changing the filter or add a manual entry above.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {submissions.map((sub: Submission) => (
+                {filteredSubmissions.map((sub: Submission) => (
                   <div key={sub.id} className="border border-neutral-800 bg-neutral-900/50 p-6 rounded-sm flex flex-col">
                     <div className="flex justify-between items-start mb-6 pb-6 border-b border-neutral-800">
                       <div>
