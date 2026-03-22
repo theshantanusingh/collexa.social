@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { Sequelize, DataTypes } = require('sequelize');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
@@ -59,9 +59,27 @@ const Submission = sequelize.define('Submission', {
   
   // Influencer specific
   niche: { type: DataTypes.STRING, allowNull: true },
-  platforms: { type: DataTypes.STRING, allowNull: true },
-  followers: { type: DataTypes.STRING, allowNull: true },
   contentType: { type: DataTypes.STRING, allowNull: true },
+});
+
+const ContactInfo = sequelize.define('ContactInfo', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  category: { // email, phone, location, follow
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  value: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  label: { // e.g., "Business Email", "Instagram"
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 });
 
 const authenticateJWT = (req, res, next) => {
@@ -137,6 +155,39 @@ app.get('/api/submissions', authenticateJWT, async (req, res) => {
   }
 });
 
+app.get('/api/contact-info', async (req, res) => {
+  try {
+    const info = await ContactInfo.findAll({ order: [['category', 'ASC']] });
+    res.json(info);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/contact-info', authenticateJWT, async (req, res) => {
+  try {
+    const { id, category, value, label } = req.body;
+    if (id) {
+      await ContactInfo.update({ category, value, label }, { where: { id } });
+      const updated = await ContactInfo.findByPk(id);
+      return res.json(updated);
+    }
+    const created = await ContactInfo.create({ category, value, label });
+    res.status(201).json(created);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/contact-info/:id', authenticateJWT, async (req, res) => {
+  try {
+    await ContactInfo.destroy({ where: { id: req.params.id } });
+    res.status(204).end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const syncDatabase = async () => {
   try {
     // Wait for DB to be ready. Just a simple retry mechanism.
@@ -160,6 +211,22 @@ const syncDatabase = async () => {
       const passwordHash = await bcrypt.hash('admin123', salt);
       await Admin.create({ email: 'admin@collexa.social', passwordHash });
       console.log('Seeded default admin (admin@collexa.social / admin123)');
+    }
+
+    // Seed default contact info if empty
+    const contactCount = await ContactInfo.count();
+    if (contactCount === 0) {
+      const defaults = [
+        { category: 'email', value: 'business@collexa.social', label: 'Business' },
+        { category: 'email', value: 'contact@collexa.social', label: 'Contact' },
+        { category: 'phone', value: '+91 86306 16359', label: '' },
+        { category: 'phone', value: '+91 97921 82280', label: '' },
+        { category: 'phone', value: '+91 70918 23115', label: '' },
+        { category: 'location', value: 'Greater Noida, Uttar Pradesh', label: '' },
+        { category: 'follow', value: 'https://www.instagram.com/collexa_/?hl=en', label: 'Instagram' },
+      ];
+      await ContactInfo.bulkCreate(defaults);
+      console.log('Seeded default contact info');
     }
   } catch (err) {
     console.error('Failed to sync database:', err);

@@ -1,14 +1,31 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+interface ContactInfo {
+  id: string;
+  category: string;
+  value: string;
+  label: string;
+}
+
 export function Contact() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const [contactInfo, setContactInfo] = useState<ContactInfo[]>([]);
 
   useEffect(() => {
+    fetch("/api/contact-info")
+      .then((res) => res.json())
+      .then((data) => setContactInfo(data))
+      .catch((err) => console.error("Failed to fetch contact info", err));
+  }, []);
+
+  useEffect(() => {
+    if (contactInfo.length === 0) return;
+
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".contact-title",
@@ -43,7 +60,12 @@ export function Contact() {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [contactInfo]);
+
+  const emails = contactInfo.filter((i) => i.category === "email");
+  const phones = contactInfo.filter((i) => i.category === "phone");
+  const locations = contactInfo.filter((i) => i.category === "location");
+  const follows = contactInfo.filter((i) => i.category === "follow");
 
   return (
     <section
@@ -60,71 +82,77 @@ export function Contact() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
           <div>
-            <div className="contact-info mb-12">
-              <div className="text-sm text-neutral-500 mb-2">Email</div>
-              <div className="flex flex-col gap-2">
-                <a
-                  href="mailto:business@collexa.social"
-                  className="text-3xl hover:opacity-60 transition-opacity"
-                >
-                  business@collexa.social
-                </a>
-                <a
-                  href="mailto:contact@collexa.social"
-                  className="text-3xl hover:opacity-60 transition-opacity"
-                >
-                  contact@collexa.social
-                </a>
+            {emails.length > 0 && (
+              <div className="contact-info mb-12">
+                <div className="text-sm text-neutral-500 mb-2">Email</div>
+                <div className="flex flex-col gap-2">
+                  {emails.map((email) => (
+                    <a
+                      key={email.id}
+                      href={`mailto:${email.value}`}
+                      className="text-3xl hover:opacity-60 transition-opacity"
+                    >
+                      {email.value}
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="contact-info mb-12">
-              <div className="text-sm text-neutral-500 mb-2">Phone</div>
-              <div className="flex flex-col gap-2">
-                <a
-                  href="tel:+918630616359"
-                  className="text-3xl hover:opacity-60 transition-opacity"
-                >
-                  +91 86306 16359
-                </a>
-                <a
-                  href="tel:+919792182280"
-                  className="text-3xl hover:opacity-60 transition-opacity"
-                >
-                  +91 97921 82280
-                </a>
-                <a
-                  href="tel:+917091823115"
-                  className="text-3xl hover:opacity-60 transition-opacity"
-                >
-                  +91 70918 23115
-                </a>
+            {phones.length > 0 && (
+              <div className="contact-info mb-12">
+                <div className="text-sm text-neutral-500 mb-2">Phone</div>
+                <div className="flex flex-col gap-2">
+                  {phones.map((phone) => (
+                    <a
+                      key={phone.id}
+                      href={`tel:${phone.value.replace(/\s+/g, "")}`}
+                      className="text-3xl hover:opacity-60 transition-opacity"
+                    >
+                      {phone.value}
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="contact-info">
-              <div className="text-sm text-neutral-500 mb-2">Location</div>
-              <div className="text-3xl">Greater Noida, Uttar Pradesh</div>
-            </div>
+            {locations.length > 0 && (
+              <div className="contact-info">
+                <div className="text-sm text-neutral-500 mb-2">Location</div>
+                <div className="flex flex-col gap-2">
+                  {locations.map((loc) => (
+                    <div key={loc.id} className="text-3xl">
+                      {loc.value}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="contact-info">
             <div className="text-sm text-neutral-500 mb-6">Follow</div>
             <div className="space-y-4 text-xl">
-              <a
-                href="https://www.instagram.com/collexa_/?hl=en"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block hover:opacity-60 transition-opacity"
-              >
-                Instagram
-              </a>
+              {follows.map((follow) => (
+                <a
+                  key={follow.id}
+                  href={follow.value}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block hover:opacity-60 transition-opacity"
+                >
+                  {follow.label || "Link"}
+                </a>
+              ))}
+              {follows.length === 0 && (
+                <div className="text-neutral-400 italic">No links added</div>
+              )}
             </div>
           </div>
         </div>
 
         <div className="mt-32 pt-12 border-t border-neutral-200 flex justify-between items-center text-sm text-neutral-500">
-          <div>© 2026 Collexa. All rights reserved.</div>
+          <div>© {new Date().getFullYear()} Collexa. All rights reserved.</div>
           <div className="flex gap-8">
             <Link to="/privacy" className="hover:opacity-60 transition-opacity">
               Privacy

@@ -24,12 +24,28 @@ interface Submission {
   createdAt: string;
 }
 
+interface ContactInfo {
+  id: string;
+  category: string;
+  value: string;
+  label: string;
+}
+
 export function AdminDashboard() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [activeTab, setActiveTab] = useState<"admins"| "submissions">("submissions");
+  const [contactInfo, setContactInfo] = useState<ContactInfo[]>([]);
+  const [activeTab, setActiveTab] = useState<"admins"| "submissions" | "contact">("submissions");
+  
+  // Admin form state
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  
+  // Contact info form state
+  const [newCategory, setNewCategory] = useState("email");
+  const [newValue, setNewValue] = useState("");
+  const [newLabel, setNewLabel] = useState("");
+  
   const [message, setMessage] = useState({ text: "", type: "" });
   const navigate = useNavigate();
 
@@ -42,6 +58,7 @@ export function AdminDashboard() {
 
     fetchAdmins(token);
     fetchSubmissions(token);
+    fetchContactInfo();
   }, [navigate]);
 
   const fetchAdmins = async (token: string) => {
@@ -75,6 +92,18 @@ export function AdminDashboard() {
     }
   };
 
+  const fetchContactInfo = async () => {
+    try {
+      const response = await fetch("/api/contact-info");
+      if (response.ok) {
+        const data = await response.json();
+        setContactInfo(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch contact info", err);
+    }
+  };
+
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage({ text: "", type: "" });
@@ -105,6 +134,53 @@ export function AdminDashboard() {
     }
   };
 
+  const handleCreateContactInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage({ text: "", type: "" });
+    const token = localStorage.getItem("collexa_admin_token");
+
+    try {
+      const response = await fetch("/api/contact-info", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ category: newCategory, value: newValue, label: newLabel }),
+      });
+
+      if (response.ok) {
+        setMessage({ text: "Contact detail added", type: "success" });
+        setNewValue("");
+        setNewLabel("");
+        fetchContactInfo();
+      } else {
+        const data = await response.json();
+        setMessage({ text: data.error || "Failed to add detail", type: "error" });
+      }
+    } catch (err) {
+      setMessage({ text: "Network error", type: "error" });
+    }
+  };
+
+  const handleDeleteContactInfo = async (id: string) => {
+    const token = localStorage.getItem("collexa_admin_token");
+    if (!window.confirm("Are you sure you want to remove this detail?")) return;
+
+    try {
+      const response = await fetch(`/api/contact-info/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        fetchContactInfo();
+      }
+    } catch (err) {
+      console.error("Failed to delete contact info", err);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("collexa_admin_token");
     navigate("/collexa-hq-portal");
@@ -126,17 +202,24 @@ export function AdminDashboard() {
           </button>
         </header>
 
-        <div className="flex gap-8 border-b border-neutral-800 mb-12 uppercase tracking-widest text-sm text-neutral-500">
+        <div className="flex gap-8 border-b border-neutral-800 mb-12 uppercase tracking-widest text-sm text-neutral-500 overflow-x-auto whitespace-nowrap scrollbar-hide">
           <button 
             className={`pb-4 transition-colors relative ${activeTab === 'submissions' ? 'text-white' : 'hover:text-neutral-300'}`}
-            onClick={() => setActiveTab('submissions')}
+            onClick={() => { setActiveTab('submissions'); setMessage({ text: "", type: "" }); }}
           >
             Submissions ({submissions.length})
             {activeTab === 'submissions' && <div className="absolute bottom-[-1px] left-0 w-full h-[1px] bg-white"></div>}
           </button>
           <button 
+            className={`pb-4 transition-colors relative ${activeTab === 'contact' ? 'text-white' : 'hover:text-neutral-300'}`}
+            onClick={() => { setActiveTab('contact'); setMessage({ text: "", type: "" }); }}
+          >
+            Contact Details
+            {activeTab === 'contact' && <div className="absolute bottom-[-1px] left-0 w-full h-[1px] bg-white"></div>}
+          </button>
+          <button 
             className={`pb-4 transition-colors relative ${activeTab === 'admins' ? 'text-white' : 'hover:text-neutral-300'}`}
-            onClick={() => setActiveTab('admins')}
+            onClick={() => { setActiveTab('admins'); setMessage({ text: "", type: "" }); }}
           >
             Admin Access
             {activeTab === 'admins' && <div className="absolute bottom-[-1px] left-0 w-full h-[1px] bg-white"></div>}
@@ -190,7 +273,7 @@ export function AdminDashboard() {
             <div className="lg:col-span-7">
               <h2 className="text-xl font-light mb-8">Active Administrators</h2>
               <div className="space-y-4">
-                {admins.map((admin) => (
+                {admins.map((admin: Admin) => (
                   <div key={admin.id} className="flex justify-between items-center p-6 border border-neutral-800 rounded-sm bg-neutral-900/50">
                     <div>
                       <div className="text-lg mb-1">{admin.email}</div>
@@ -212,6 +295,95 @@ export function AdminDashboard() {
           </div>
         )}
 
+        {activeTab === 'contact' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+            <div className="lg:col-span-5">
+              <h2 className="text-xl font-light mb-8">Add Contact Detail</h2>
+              <form onSubmit={handleCreateContactInfo} className="space-y-6 bg-neutral-900 border border-neutral-800 p-8 rounded-sm">
+                {message.text && (activeTab === 'contact') && (
+                  <div className={`p-4 rounded-sm text-sm ${message.type === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                    {message.text}
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-3">Category</label>
+                  <select
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                  >
+                    <option value="email">Email</option>
+                    <option value="phone">Phone</option>
+                    <option value="location">Location</option>
+                    <option value="follow">Follow Link</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-3">Value (Email, Phone, Address, URL)</label>
+                  <input
+                    type="text"
+                    value={newValue}
+                    onChange={(e) => setNewValue(e.target.value)}
+                    placeholder="e.g., hello@collexa.social"
+                    className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all placeholder:text-neutral-700"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-neutral-500 mb-3">Label (e.g., "Business", "Instagram")</label>
+                  <input
+                    type="text"
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                    placeholder="Optional label"
+                    className="w-full bg-black border border-neutral-800 rounded-sm px-4 py-3 text-white text-sm focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all placeholder:text-neutral-700"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-4 bg-white text-black text-sm tracking-widest uppercase hover:bg-neutral-200 transition-colors mt-4 rounded-sm"
+                >
+                  Add Detail
+                </button>
+              </form>
+            </div>
+
+            <div className="lg:col-span-7">
+              <h2 className="text-xl font-light mb-8">Existing Details</h2>
+              <div className="space-y-4">
+                {['email', 'phone', 'location', 'follow'].map((cat: string) => (
+                  <div key={cat} className="space-y-3">
+                    <h3 className="text-xs uppercase tracking-[0.2em] text-neutral-600 font-medium ml-1">{cat}s</h3>
+                    {contactInfo.filter((item: ContactInfo) => item.category === cat).map((item: ContactInfo) => (
+                      <div key={item.id} className="flex justify-between items-center p-4 border border-neutral-800 rounded-sm bg-neutral-900/50 group">
+                        <div>
+                          <div className="text-sm font-light text-white">{item.value}</div>
+                          {item.label && <div className="text-[10px] uppercase tracking-widest text-neutral-500 mt-1">{item.label}</div>}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteContactInfo(item.id)}
+                          className="text-neutral-600 hover:text-red-500 transition-colors text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    {contactInfo.filter((item: ContactInfo) => item.category === cat).length === 0 && (
+                      <div className="p-4 border border-dashed border-neutral-800 rounded-sm text-center text-neutral-700 text-xs italic">
+                        No {cat} details added
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'submissions' && (
           <div>
             <h2 className="text-xl font-light mb-8">Recent Application Submissions</h2>
@@ -222,7 +394,7 @@ export function AdminDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {submissions.map((sub) => (
+                {submissions.map((sub: Submission) => (
                   <div key={sub.id} className="border border-neutral-800 bg-neutral-900/50 p-6 rounded-sm flex flex-col">
                     <div className="flex justify-between items-start mb-6 pb-6 border-b border-neutral-800">
                       <div>
