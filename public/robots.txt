@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /collexa-hq-portal/
+Disallow: /collexa-hq-portal
+
+Sitemap: https://collexa.social/sitemap.xml
