@@ -66,14 +66,14 @@ export function Work() {
     {
       client: "Tech Startup",
       campaign: "Product Launch",
-      reach: "5M+",
+      reach: "1M+",
       image:
         "https://images.unsplash.com/photo-1647892842753-01ee3cafd42e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGJsYWNrJTIwd2hpdGUlMjBhcmNoaXRlY3R1cmV8ZW58MXx8fHwxNzc0MDM5MDc4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     },
     {
       client: "Fashion Brand",
       campaign: "Seasonal Collection",
-      reach: "8M+",
+      reach: "1M+",
       image:
         "https://images.pexels.com/photos/6894282/pexels-photo-6894282.jpeg",
     },
