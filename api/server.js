@@ -281,6 +281,19 @@ const syncDatabase = async () => {
     await sequelize.sync();
     console.log('Database synced successfully');
     
+    // Auto-migration for existing Docker databases to ensure Creators fields are TEXT
+    try {
+      await sequelize.query('ALTER TABLE "Creators" ALTER COLUMN "about" TYPE TEXT;');
+      await sequelize.query('ALTER TABLE "Creators" ALTER COLUMN "imageUrl" TYPE TEXT;');
+      await sequelize.query('ALTER TABLE "Creators" ALTER COLUMN "name" TYPE TEXT;');
+      await sequelize.query('ALTER TABLE "Creators" ALTER COLUMN "handle" TYPE TEXT;');
+      await sequelize.query('ALTER TABLE "Creators" ALTER COLUMN "followers" TYPE TEXT;');
+      await sequelize.query('ALTER TABLE "Creators" ALTER COLUMN "niche" TYPE TEXT;');
+      console.log('Creators table optimized for unlimited text length.');
+    } catch (err) {
+      // Safely ignore if columns already exist as TEXT or if table is locked
+    }
+    
     // Seed default admin if table is empty
     const count = await Admin.count();
     if (count === 0) {
