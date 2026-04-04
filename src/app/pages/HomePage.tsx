@@ -6,6 +6,7 @@ import { Services } from "../components/Services";
 import { Approach } from "../components/Approach";
 import { Capabilities } from "../components/Capabilities";
 import { Process } from "../components/Process";
+import { Creators } from "../components/Creators";
 import { Work } from "../components/Work";
 import { Metrics } from "../components/Metrics";
 import { Contact } from "../components/Contact";
@@ -39,6 +40,7 @@ export function HomePage() {
       <Approach />
       <Capabilities />
       <Process />
+      <Creators />
       <Work />
       <Metrics />
       <Contact />

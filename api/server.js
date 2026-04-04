@@ -84,6 +84,21 @@ const ContactInfo = sequelize.define('ContactInfo', {
   },
 });
 
+const Creator = sequelize.define('Creator', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  name: { type: DataTypes.STRING, allowNull: false },
+  handle: { type: DataTypes.STRING, allowNull: false },
+  followers: { type: DataTypes.STRING, allowNull: false, defaultValue: '0' },
+  niche: { type: DataTypes.STRING, allowNull: false, defaultValue: '' },
+  about: { type: DataTypes.TEXT, allowNull: true, defaultValue: '' },
+  imageUrl: { type: DataTypes.STRING, allowNull: true, defaultValue: '' },
+  displayOrder: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+});
+
 const authenticateJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (authHeader) {
@@ -199,6 +214,51 @@ app.post('/api/contact-info', authenticateJWT, async (req, res) => {
 app.delete('/api/contact-info/:id', authenticateJWT, async (req, res) => {
   try {
     await ContactInfo.destroy({ where: { id: req.params.id } });
+    res.status(204).end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Creators (public read, protected write) ─────────────────────────────────
+
+app.get('/api/creators', async (req, res) => {
+  try {
+    const creators = await Creator.findAll({ order: [['displayOrder', 'ASC'], ['createdAt', 'ASC']] });
+    res.json(creators);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/creators', authenticateJWT, async (req, res) => {
+  try {
+    const { name, handle, followers, niche, about, imageUrl, displayOrder } = req.body;
+    if (!name || !handle) return res.status(400).json({ error: 'Name and handle are required' });
+    const creator = await Creator.create({ name, handle, followers, niche, about, imageUrl, displayOrder: displayOrder ?? 0 });
+    res.status(201).json(creator);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/creators/:id', authenticateJWT, async (req, res) => {
+  try {
+    const { name, handle, followers, niche, about, imageUrl, displayOrder } = req.body;
+    const creator = await Creator.findByPk(req.params.id);
+    if (!creator) return res.status(404).json({ error: 'Creator not found' });
+    await creator.update({ name, handle, followers, niche, about, imageUrl, displayOrder });
+    res.json(creator);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/creators/:id', authenticateJWT, async (req, res) => {
+  try {
+    const creator = await Creator.findByPk(req.params.id);
+    if (!creator) return res.status(404).json({ error: 'Creator not found' });
+    await creator.destroy();
     res.status(204).end();
   } catch (err) {
     res.status(500).json({ error: err.message });
