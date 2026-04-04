@@ -95,7 +95,7 @@ const Creator = sequelize.define('Creator', {
   followers: { type: DataTypes.STRING, allowNull: false, defaultValue: '0' },
   niche: { type: DataTypes.STRING, allowNull: false, defaultValue: '' },
   about: { type: DataTypes.TEXT, allowNull: true, defaultValue: '' },
-  imageUrl: { type: DataTypes.STRING, allowNull: true, defaultValue: '' },
+  imageUrl: { type: DataTypes.TEXT, allowNull: true, defaultValue: '' },
   displayOrder: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
 });
 
