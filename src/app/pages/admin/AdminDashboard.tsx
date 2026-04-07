@@ -22,6 +22,7 @@ interface Submission {
   followers: string;
   contentType: string;
   createdAt: string;
+  status: string;
 }
 
 interface ContactInfo {
@@ -190,6 +191,35 @@ export function AdminDashboard() {
         fetchSubmissions(getToken());
       }
     } catch { showMsg("Failed to create submission", "error"); }
+  };
+
+  const handleDeleteSubmission = async (id: string) => {
+    if (!window.confirm("Are you sure you want to remove this query?")) return;
+    try {
+      const res = await fetch(`/api/submissions/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${getToken()}` } });
+      if (res.ok) {
+        showMsg("Query removed successfully", "success");
+        fetchSubmissions(getToken());
+      } else {
+        showMsg("Failed to remove query", "error");
+      }
+    } catch { showMsg("Network error", "error"); }
+  };
+
+  const handleToggleSubmissionStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === "resolved" ? "pending" : "resolved";
+    try {
+      const res = await fetch(`/api/submissions/${id}/status`, { 
+        method: "PUT", 
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        fetchSubmissions(getToken());
+      } else {
+        showMsg("Failed to update status", "error");
+      }
+    } catch { showMsg("Network error", "error"); }
   };
 
   // ── Contact info handlers ───────────────────────────────────────────────────
@@ -701,13 +731,40 @@ export function AdminDashboard() {
                   <div key={sub.id} className="border border-neutral-800 bg-neutral-900/50 p-6 rounded-sm flex flex-col">
                     <div className="flex justify-between items-start mb-6 pb-6 border-b border-neutral-800">
                       <div>
-                        <span className={`inline-block px-2 py-1 text-xs uppercase tracking-widest rounded-sm mb-3 ${sub.userType === "brand" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "bg-purple-500/10 text-purple-400 border border-purple-500/20"}`}>
-                          {sub.userType}
-                        </span>
-                        <h3 className="text-xl font-light">{sub.name}</h3>
+                        <div className="flex gap-2 mb-3">
+                          <span className={`inline-block px-2 py-1 text-xs uppercase tracking-widest rounded-sm ${sub.userType === "brand" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "bg-purple-500/10 text-purple-400 border border-purple-500/20"}`}>
+                            {sub.userType}
+                          </span>
+                          {sub.status === "resolved" && (
+                            <span className="inline-block px-2 py-1 text-xs uppercase tracking-widest rounded-sm bg-green-500/10 text-green-400 border border-green-500/20">
+                              Done
+                            </span>
+                          )}
+                        </div>
+                        <h3 className={`text-xl font-light ${sub.status === "resolved" ? "text-neutral-500 line-through" : "text-white"}`}>{sub.name}</h3>
                         <p className="text-neutral-500">{sub.company}</p>
                       </div>
-                      <div className="text-right text-xs text-neutral-600">{new Date(sub.createdAt).toLocaleDateString()}</div>
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="text-right text-xs text-neutral-600 mb-1">{new Date(sub.createdAt).toLocaleDateString()}</div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleToggleSubmissionStatus(sub.id, sub.status)}
+                            className={`text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-sm transition-colors border ${
+                              sub.status === "resolved"
+                                ? "bg-neutral-800 text-neutral-400 border-neutral-700 hover:bg-neutral-700"
+                                : "text-neutral-500 hover:text-green-400 border-neutral-800 hover:border-green-500/30 bg-black/20"
+                            }`}
+                          >
+                            {sub.status === "resolved" ? "Undo" : "Mark Done"}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSubmission(sub.id)}
+                            className="text-[10px] uppercase tracking-widest text-neutral-500 hover:text-red-400 transition-colors border border-neutral-800 hover:border-red-500/30 px-3 py-1.5 rounded-sm bg-black/20"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="flex-grow space-y-4 text-sm text-neutral-400 mb-6">

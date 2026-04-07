@@ -62,6 +62,7 @@ const Submission = sequelize.define('Submission', {
   platforms: { type: DataTypes.STRING, allowNull: true },
   followers: { type: DataTypes.STRING, allowNull: true },
   contentType: { type: DataTypes.STRING, allowNull: true },
+  status: { type: DataTypes.STRING, defaultValue: 'pending', allowNull: false },
 });
 
 const ContactInfo = sequelize.define('ContactInfo', {
@@ -187,6 +188,31 @@ app.get('/api/submissions', authenticateJWT, async (req, res) => {
   }
 });
 
+app.put('/api/submissions/:id/status', authenticateJWT, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const submission = await Submission.findByPk(req.params.id);
+    if (!submission) return res.status(404).json({ error: 'Submission not found' });
+    
+    await submission.update({ status: status || 'pending' });
+    res.json(submission);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/submissions/:id', authenticateJWT, async (req, res) => {
+  try {
+    const submission = await Submission.findByPk(req.params.id);
+    if (!submission) return res.status(404).json({ error: 'Submission not found' });
+    
+    await submission.destroy();
+    res.status(204).end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/contact-info', async (req, res) => {
   try {
     const info = await ContactInfo.findAll({ order: [['category', 'ASC']] });
@@ -292,6 +318,14 @@ const syncDatabase = async () => {
       console.log('Creators table optimized for unlimited text length.');
     } catch (err) {
       // Safely ignore if columns already exist as TEXT or if table is locked
+    }
+    
+    // Auto-migration for Submissions
+    try {
+      await sequelize.query('ALTER TABLE "Submissions" ADD COLUMN "status" VARCHAR(255) DEFAULT \'pending\' NOT NULL;');
+      console.log('Added status column to Submissions table.');
+    } catch (err) {
+      // Safely ignore if column already exists
     }
     
     // Seed default admin if table is empty
